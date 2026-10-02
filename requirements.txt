@@ -1,0 +1,57 @@
+# Core
+python-dotenv>=1.0
+openai>=1.30
+httpx>=0.28.0
+ollama>=0.1.0
+duckduckgo_search>=6.2,<9.0
+
+# Speech-to-Text
+SpeechRecognition>=3.10.0
+PyAudio>=0.2.14
+deepgram-sdk>=3.0
+
+
+# Text-to-Speech
+pygame>=2.5
+pyttsx3>=2.90
+edge-tts>=6.0.0
+kokoro>=0.1.0
+soundfile>=0.12.0
+
+
+
+# System Tray
+pystray>=0.19
+Pillow>=10.0
+
+# Offline Wake Word (optional — falls back to Google STT)
+vosk>=0.3
+
+# Semantic Memory & Emotion Detection
+chromadb
+transformers
+sentence-transformers>=2.2.0
+rank-bm25>=0.2.2
+
+# Security & Audio Processing
+torch
+torchaudio
+speechbrain
+noisereduce
+numpy
+scipy
+psutil>=5.9
+
+# Screen Awareness & Automation
+mss
+pytesseract
+pyautogui
+pygetwindow
+
+# Browser Automation
+playwright
+
+# Desktop Automation
+pywinauto
+pyperclip
+pywin32; sys_platform == "win32"

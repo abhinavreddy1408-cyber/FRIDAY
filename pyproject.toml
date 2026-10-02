@@ -1,0 +1,277 @@
+[build-system]
+requires      = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# ── Project Metadata ───────────────────────────────────────────────────────────
+
+[project]
+name            = "friday-assistant"
+version         = "0.2.0"
+description     = "CLI-first modular F.R.I.D.A.Y / JARVIS-style AI assistant"
+readme          = "README.md"
+license         = { text = "MIT" }
+requires-python = ">=3.10"
+
+authors = [
+    { name = "Abhinav", email = "you@example.com" },
+]
+
+keywords = [
+    "ai", "assistant", "llm", "voice", "cli", "friday", "jarvis",
+    "openai", "nvidia", "agentic",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# ── Core Runtime Dependencies ──────────────────────────────────────────────────
+# Pin minor versions to avoid silent breakage; upper bounds are intentionally
+# loose — bump after validating in CI.
+
+dependencies = [
+    # CLI framework
+    "typer[all]>=0.12,<1.0",
+
+    # Data validation & settings
+    "pydantic>=2.7,<3.0",
+    "pydantic-settings>=2.3,<3.0",
+
+    # ORM / async DB
+    "sqlmodel>=0.0.18,<1.0",
+    "aiosqlite>=0.20,<1.0",
+
+    # HTTP client (sync + async)
+    "httpx[http2]>=0.27,<1.0",
+
+    # Env / config
+    "python-dotenv>=1.0,<2.0",
+
+    # LLM — OpenAI-compatible (targets NVIDIA NIM / Nemotron)
+    "openai>=1.40,<2.0",
+
+    # Structured logging
+    "loguru>=0.7,<1.0",
+
+    # Numerical + system
+    "numpy>=1.26,<3.0",
+    "psutil>=5.9,<7.0",
+
+    # Image handling
+    "Pillow>=10.3,<12.0",
+
+    # Async task utilities
+    "anyio>=4.3,<5.0",
+
+    # Semantic memory embeddings
+    "sentence-transformers>=2.7,<4.0",
+
+    # Local web search tool
+    "duckduckgo_search>=6.2,<9.0",
+]
+
+# ── Optional Dependency Groups ─────────────────────────────────────────────────
+
+[project.optional-dependencies]
+
+# Full voice pipeline: STT (Whisper) + audio I/O + TTS phonemiser
+voice = [
+    "faster-whisper>=1.0,<2.0",
+    "sounddevice>=0.4,<1.0",
+    "soundfile>=0.12,<1.0",                                      # WAV I/O for sounddevice
+    "piper-phonemizer>=1.1; platform_system != 'Windows'",
+]
+
+# UI layer — React dev server hot-reload proxy support
+ui = [
+    "fastapi>=0.111,<1.0",
+    "uvicorn[standard]>=0.29,<1.0",
+    "websockets>=12.0,<13.0",
+]
+
+# Developer toolchain
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "pytest-xdist>=3.5",           # parallel test execution
+    "httpx>=0.27",                  # async test client for FastAPI
+    "respx>=0.21",                  # HTTPX request mocking
+    "ruff>=0.4",                    # lint + format (replaces flake8/black/isort)
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+]
+
+# Convenience meta-group for full local development
+all = [
+    "friday-assistant[voice,ui,dev]",
+]
+
+# ── Entry Points ───────────────────────────────────────────────────────────────
+
+[project.scripts]
+friday    = "friday.cli.main:app"           # primary CLI command
+friday-ui = "friday.ui.server:start"        # launch the web UI server
+
+[project.urls]
+Homepage      = "https://github.com/abhinavreddy1408-cyber/friday-assistant"
+Repository    = "https://github.com/abhinavreddy1408-cyber/friday-assistant"
+"Bug Tracker" = "https://github.com/abhinavreddy1408-cyber/friday-assistant/issues"
+
+# ── Package Discovery ──────────────────────────────────────────────────────────
+
+[tool.setuptools.packages.find]
+where   = ["."]
+include = ["friday*"]
+exclude = ["tests*", "docs*", "scripts*"]
+
+[tool.setuptools.package-data]
+friday = [
+    "py.typed",                    # PEP 561 marker — enables mypy to type-check consumers
+    "assets/**/*",
+    "personality/prompts/*.txt",
+]
+
+# ── Ruff (lint + format) ───────────────────────────────────────────────────────
+
+[tool.ruff]
+target-version = "py310"
+line-length    = 100
+src            = ["friday", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking (moves pure-type imports to TYPE_CHECKING)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501",  # line length handled by formatter
+    "B008",  # do not perform function calls in default arguments (Typer pattern)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["friday"]
+
+[tool.ruff.format]
+quote-style               = "double"
+indent-style              = "space"
+skip-magic-trailing-comma = false
+
+# ── Mypy ──────────────────────────────────────────────────────────────────────
+
+[tool.mypy]
+python_version          = "3.10"
+strict                  = true
+pretty                  = true
+show_error_codes        = true
+warn_unreachable        = true
+ignore_missing_imports  = false        # force explicit stubs or inline types
+plugins                 = ["pydantic.mypy"]
+exclude                 = ["^tests/legacy/"]
+
+[[tool.mypy.overrides]]
+module = [
+    "sounddevice.*",
+    "faster_whisper.*",
+    "piper.*",
+    "pystray.*",
+    "psutil.*",
+    "comtypes.*",
+    "pycaw.*",
+    "pyautogui.*",
+    "mss.*",
+    "noisereduce.*",
+    "speech_recognition.*",
+    "respx.*",
+    "pyperclip.*",
+    "keyboard.*",
+    "vosk.*",
+    "pygame.*",
+    "pyaudio.*",
+    "google.*",
+    "google_auth_oauthlib.*",
+    "googleapiclient.*",
+]
+ignore_missing_imports = true          # no stubs available for these libs
+
+# ── Pytest ─────────────────────────────────────────────────────────────────────
+
+[tool.pytest.ini_options]
+testpaths       = ["tests"]
+norecursedirs   = ["legacy"]
+asyncio_mode    = "auto"               # no @pytest.mark.asyncio needed on every test
+addopts         = [
+    "-q",
+    "--tb=short",
+    "--strict-markers",                # unknown markers = hard failure
+    "--cov=friday",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=45",             # CI fails if active-core coverage drops below 45 %
+]
+markers = [
+    "unit: Fast, pure-Python unit tests; no I/O.",
+    "integration: Tests that hit a real API or DB; requires env vars.",
+    "voice: Tests requiring audio hardware.",
+    "slow: Tests expected to take > 5 s."
+]
+
+# ── Coverage ───────────────────────────────────────────────────────────────────
+
+[tool.coverage.run]
+source          = ["friday"]
+omit            = [
+    "friday/cli/*",
+    "friday/ui/*",
+    "friday/tray.py",
+    "friday/stt.py",
+    "friday/tts.py",
+    "friday/wake_word.py",
+    "friday/sounds.py",
+    "friday/audio_processing.py",
+    "friday/screen.py",
+    "friday/monitor.py",
+    "friday/watchdog.py",
+    "friday/engine.py",
+    "friday/actions/*",
+    "friday/actions_legacy.py",
+    "friday/desktop_tools.py",
+    "friday/skills/*",
+    "friday/sandbox.py",
+    "friday/security.py",
+    "friday/permissions.py",
+    "friday/audit.py",
+    "friday/preferences.py",
+    "friday/memory_legacy.py",
+    "friday/memory/store.py",
+    "friday/utils/*",
+    "friday/verifier.py",
+    "tests/*",
+]
+branch          = true
+
+[tool.coverage.report]
+exclude_lines   = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+]
